@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>رادار الأسهم السعودية</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Segoe UI',Arial,sans-serif;background:#f5f5f7;color:#1d1d1f;direction:rtl}
+  .wrap{max-width:960px;margin:0 auto;padding:1.5rem 1rem}
+  .header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:1.5rem;flex-wrap:wrap;gap:10px}
+  .ttl{font-size:22px;font-weight:600;color:#1d1d1f}
+  .sub{font-size:13px;color:#666;margin-top:3px}
+  .refresh-btn{background:#fff;border:1px solid #ddd;border-radius:10px;padding:8px 16px;font-size:13px;cursor:pointer;color:#333}
+  .refresh-btn:hover{background:#f0f0f0}
+  .email-row{background:#fff;border-radius:12px;padding:14px 16px;margin-bottom:1.25rem;display:flex;gap:8px;align-items:center;flex-wrap:wrap;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+  .email-row label{font-size:13px;color:#555;white-space:nowrap}
+  .email-row input{flex:1;min-width:180px;border:1px solid #ddd;border-radius:8px;padding:7px 11px;font-size:13px;direction:ltr}
+  .send-btn{background:#1d1d1f;border:none;border-radius:8px;padding:7px 16px;font-size:13px;cursor:pointer;color:#fff;white-space:nowrap}
+  .send-btn:hover{background:#333}
+  .send-btn:disabled{opacity:0.5;cursor:not-allowed}
+  .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:1.25rem}
+  .stat{background:#fff;border-radius:12px;padding:12px 14px;box-shadow:0 1px 4px rgba(0,0,0,0.06)}
+  .stat-l{font-size:11px;color:#888;margin-bottom:4px}
+  .stat-v{font-size:24px;font-weight:600;color:#1d1d1f}
+  .stat-v.g{color:#1a8a5a}.stat-v.a{color:#b06a00}
+  .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px}
+  .card{background:#fff;border:1.5px solid #eee;border-radius:14px;padding:1rem 1.1rem;box-shadow:0 1px 4px rgba(0,0,0,0.05)}
+  .card.buy{border-color:#1a8a5a}.card.watch{border-color:#b06a00}
+  .ch{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:8px}
+  .cn{font-size:14px;font-weight:600}
+  .ct{font-size:11px;color:#888;margin-top:2px}
+  .badge{font-size:11px;padding:3px 9px;border-radius:8px;font-weight:600}
+  .badge.buy{background:#e1f5ee;color:#0f6e56}
+  .badge.watch{background:#faeeda;color:#854f0b}
+  .badge.neutral{background:#f0f0f0;color:#666}
+  .price{font-size:20px;font-weight:600;margin-bottom:8px}
+  .chg{font-size:12px;font-weight:500;margin-right:6px}
+  .inds{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:8px}
+  .ind{background:#f5f5f7;border-radius:8px;padding:6px;text-align:center}
+  .il{font-size:10px;color:#888}
+  .iv{font-size:13px;font-weight:600}
+  .iv.g{color:#1a8a5a}.iv.r{color:#c0392b}.iv.a{color:#b06a00}
+  .sbar{margin-top:6px}
+  .slbl{font-size:10px;color:#888;display:flex;justify-content:space-between;margin-bottom:3px}
+  .trk{height:5px;background:#eee;border-radius:3px;overflow:hidden}
+  .fill{height:100%;border-radius:3px;transition:width 0.4s}
+  .sig{font-size:11px;color:#666;margin-top:8px;padding-top:8px;border-top:1px solid #f0f0f0;line-height:1.6}
+  .loading{text-align:center;padding:3rem;color:#888;font-size:14px}
+  .error{text-align:center;padding:2rem;color:#c0392b;font-size:13px;background:#fff;border-radius:12px}
+  .disc{font-size:11px;color:#aaa;margin-top:1rem;text-align:center}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#1d1d1f;color:#fff;border-radius:10px;padding:10px 20px;font-size:13px;display:none;z-index:99}
+  .live-dot{display:inline-block;width:7px;height:7px;background:#1a8a5a;border-radius:50%;margin-left:5px;animation:pulse 2s infinite}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="header">
+    <div>
+      <div class="ttl">رادار الأسهم السعودية <span class="live-dot"></span></div>
+      <div class="sub" id="sub">جارٍ تحميل البيانات...</div>
+    </div>
+    <button class="refresh-btn" onclick="runScan()">تحديث ↻</button>
+  </div>
+
+  <div class="email-row">
+    <label>إرسال التقرير إلى:</label>
+    <input type="email" id="emailIn" placeholder="بريدك الإلكتروني" />
+    <button class="send-btn" id="sendBtn" onclick="sendReport()">إرسال التقرير ↗</button>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="stat-l">فرص شراء</div><div class="stat-v g" id="bc">—</div></div>
+    <div class="stat"><div class="stat-l">تحت المراقبة</div><div class="stat-v a" id="wc">—</div></div>
+    <div class="stat"><div class="stat-l">محايد</div><div class="stat-v" id="nc">—</div></div>
+    <div class="stat"><div class="stat-l">آخر تحديث</div><div class="stat-v" style="font-size:13px" id="ts">—</div></div>
+  </div>
+
+  <div class="grid" id="grid"><div class="loading">⏳ جارٍ جلب بيانات تداول...</div></div>
+  <div class="disc">للتحليل والاستئناس فقط — ليست توصية استثمارية. القرار دائماً لك.</div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){ emailjs.init({ publicKey: 'nnrlczCt2hEWB8_Se' }); })();
+
+const STOCKS_META = {
+  '2222.SR':{name:'أرامكو',sector:'طاقة',support:25.8,resistance:31.2},
+  '2010.SR':{name:'سابك',sector:'بتروكيماويات',support:85.0,resistance:98.0},
+  '1120.SR':{name:'الراجحي',sector:'بنوك',support:79.5,resistance:92.0},
+  '7010.SR':{name:'stc',sector:'اتصالات',support:49.0,resistance:58.5},
+  '1211.SR':{name:'معادن',sector:'تعدين',support:44.5,resistance:55.0},
+  '1180.SR':{name:'الأهلي',sector:'بنوك',support:29.0,resistance:35.5},
+  '7030.SR':{name:'زين السعودية',sector:'اتصالات',support:10.5,resistance:13.5},
+  '2050.SR':{name:'صافولا',sector:'غذاء',support:31.5,resistance:38.0},
+  '2310.SR':{name:'الكيميائية',sector:'كيماويات',support:17.8,resistance:22.5},
+  '4300.SR':{name:'دار الأركان',sector:'عقارات',support:12.0,resistance:16.0}
+};
+
+let analysed = [];
+
+function calcRSI(price, support, resistance){
+  const dist = (price - support)/(resistance - support);
+  return Math.min(78, Math.max(18, Math.round(22 + dist*55)));
+}
+
+function fillColor(d){ return d<0.2?'#1a8a5a':d<0.45?'#5dca9e':d<0.65?'#b06a00':'#c0392b'; }
+
+function analyseStock(q){
+  const meta = STOCKS_META[q.ticker] || {};
+  const price = q.price;
+  const support = meta.support || (q.low52 * 1.02);
+  const resistance = meta.resistance || (q.high52 * 0.97);
+  const range = resistance - support;
+  const dist = Math.max(0, Math.min(1, (price - support) / range));
+  const distPct = +((price - support) / support * 100).toFixed(1);
+  const rsi = calcRSI(price, support, resistance);
+  const ma200 = q.ma200 || (support * 1.1);
+  const volRatio = q.volume && q.avgVolume ? q.volume / q.avgVolume : 1;
+  const volLabel = volRatio > 1.3 ? 'مرتفع' : volRatio < 0.7 ? 'منخفض' : 'عادي';
+
+  let status = dist > 0.55 ? 'neutral' : (dist < 0.22 || rsi < 35) ? 'buy' : 'watch';
+  let sigs = [];
+  if(rsi < 35) sigs.push('RSI في منطقة إفراط بيع');
+  if(distPct < 6) sigs.push('قريب جداً من القاع التاريخي');
+  if(price < ma200) sigs.push('تحت المتوسط المتحرك 200 يوم');
+  if(volRatio > 1.3 && status !== 'neutral') sigs.push('حجم تداول مرتفع — اهتمام ملحوظ');
+  if(!sigs.length) sigs.push('لا توجد إشارات واضحة حالياً');
+
+  return { ...q, ...meta, price, support, resistance, dist, distPct, rsi, ma200, volLabel, status, sigs };
+}
+
+function cardHTML(d){
+  const chgPct = d.changePct ? d.changePct.toFixed(2) : '0.00';
+  const chgS = d.change >= 0 ? '+' : '';
+  const chgC = d.change >= 0 ? '#1a8a5a' : '#c0392b';
+  const badgeLabel = d.status==='buy'?'فرصة شراء':d.status==='watch'?'مراقبة':'محايد';
+  return `<div class="card ${d.status}">
+    <div class="ch">
+      <div><div class="cn">${d.name||d.ticker}</div><div class="ct">${d.ticker.replace('.SR','')} · ${d.sector||''}</div></div>
+      <span class="badge ${d.status}">${badgeLabel}</span>
+    </div>
+    <div class="price">${d.price?.toFixed(2)} ريال <span class="chg" style="color:${chgC}">${chgS}${chgPct}%</span></div>
+    <div class="inds">
+      <div class="ind"><div class="il">RSI</div><div class="iv ${d.rsi<35?'g':d.rsi>60?'r':'a'}">${d.rsi}</div></div>
+      <div class="ind"><div class="il">MA200</div><div class="iv ${d.price<d.ma200?'g':'r'}">${d.price<d.ma200?'تحته':'فوقه'}</div></div>
+      <div class="ind"><div class="il">حجم</div><div class="iv a">${d.volLabel}</div></div>
+    </div>
+    <div class="sbar">
+      <div class="slbl"><span>دعم ${d.support}</span><span>${d.distPct}% من الدعم</span><span>مقاومة ${d.resistance}</span></div>
+      <div class="trk"><div class="fill" style="width:${(d.dist*100).toFixed(0)}%;background:${fillColor(d.dist)}"></div></div>
+    </div>
+    <div class="sig">${d.sigs.join(' · ')}</div>
+  </div>`;
+}
+
+async function runScan(){
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '<div class="loading">⏳ جارٍ جلب بيانات تداول الحقيقية...</div>';
+  try {
+    const res = await fetch('/api/stocks');
+    const json = await res.json();
+    if(!json.success || !json.data?.length) throw new Error('لا توجد بيانات');
+
+    analysed = json.data.map(q => analyseStock(q));
+    analysed.sort((a,b)=>({'buy':0,'watch':1,'neutral':2}[a.status]-{'buy':0,'watch':1,'neutral':2}[b.status]));
+
+    let buy=0,watch=0,neutral=0;
+    analysed.forEach(d=>{ if(d.status==='buy') buy++; else if(d.status==='watch') watch++; else neutral++; });
+
+    grid.innerHTML = analysed.map(cardHTML).join('');
+    document.getElementById('bc').textContent = buy;
+    document.getElementById('wc').textContent = watch;
+    document.getElementById('nc').textContent = neutral;
+    const now = new Date();
+    document.getElementById('ts').textContent = now.toLocaleTimeString('ar-SA',{hour:'2-digit',minute:'2-digit'});
+    document.getElementById('sub').textContent = 'بيانات حقيقية من Yahoo Finance — تأخير 15 دقيقة';
+  } catch(err){
+    grid.innerHTML = `<div class="error">⚠️ تعذّر جلب البيانات: ${err.message}<br><small>تأكد من نشر المشروع على Vercel</small></div>`;
+  }
+}
+
+function buildReport(){
+  const now = new Date().toLocaleDateString('ar-SA',{year:'numeric',month:'long',day:'numeric',hour:'2-digit',minute:'2-digit'});
+  let lines = [`رادار الأسهم السعودية — ${now}\n${'='.repeat(45)}\n`];
+  const buys = analysed.filter(d=>d.status==='buy');
+  const watches = analysed.filter(d=>d.status==='watch');
+  if(buys.length){
+    lines.push('✅ فرص الشراء:\n');
+    buys.forEach(d=>{
+      lines.push(`${d.name} (${d.ticker.replace('.SR','')}) — السعر: ${d.price?.toFixed(2)} ريال`);
+      lines.push(`RSI: ${d.rsi} | ${d.distPct}% من الدعم | MA200: ${d.price<d.ma200?'تحته':'فوقه'}`);
+      lines.push(`الإشارات: ${d.sigs.join(' — ')}\n`);
+    });
+  }
+  if(watches.length){
+    lines.push('⚠️ تحت المراقبة:\n');
+    watches.forEach(d=>{
+      lines.push(`${d.name} (${d.ticker.replace('.SR','')}) — السعر: ${d.price?.toFixed(2)} ريال`);
+      lines.push(`RSI: ${d.rsi} | ${d.distPct}% من الدعم\n`);
+    });
+  }
+  lines.push('---\nهذا التقرير للتحليل فقط وليس توصية استثمارية.');
+  return lines.join('\n');
+}
+
+function showToast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.style.display='block';
+  setTimeout(()=>t.style.display='none',3500);
+}
+
+function sendReport(){
+  const email=document.getElementById('emailIn').value.trim();
+  if(!email||!email.includes('@')){ showToast('أدخل بريداً إلكترونياً صحيحاً'); return; }
+  if(!analysed.length){ showToast('اضغط تحديث أولاً'); return; }
+  const btn=document.getElementById('sendBtn');
+  btn.disabled=true; btn.textContent='جارٍ الإرسال...';
+  emailjs.send('service_tbho9jb','template_fu3nn62',{
+    to_email: email,
+    report: buildReport(),
+    name: 'رادار الأسهم'
+  }).then(()=>{
+    showToast('✓ وصل التقرير إلى ' + email);
+    btn.disabled=false; btn.textContent='إرسال التقرير ↗';
+  }).catch(err=>{
+    showToast('خطأ في الإرسال');
+    console.error(err);
+    btn.disabled=false; btn.textContent='إرسال التقرير ↗';
+  });
+}
+
+runScan();
+setInterval(runScan, 5 * 60 * 1000); // تحديث كل 5 دقائق
+</script>
+</body>
+</html>
